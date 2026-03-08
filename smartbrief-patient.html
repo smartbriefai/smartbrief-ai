@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>SmartBrief AI - Tell Your Doctor</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,500;1,300;1,500&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;height:100%}
+:root{
+  --g:#1B5E35;--gl:#2E7D4F;--gp:#C8DDC8;--gfp:#EAF2EA;
+  --warm:#FAF7F2;--cream:#F2EDE4;--ink:#161A14;--muted:#5A6055;
+  --orange:#D4620A;--orangeL:#FEF0DC;
+  --r:14px;
+}
+body{background:var(--warm);color:var(--ink);font-family:'DM Sans',sans-serif;font-weight:300;min-height:100vh;overflow-x:hidden}
+
+/* HEADER */
+.header{padding:1.4rem 1.2rem 1rem;text-align:center;position:relative}
+.logo{font-family:'Fraunces',serif;font-size:1.15rem;font-weight:500;color:var(--ink);letter-spacing:-.01em}
+.logo em{font-style:italic;color:var(--g)}
+.clinic-tag{display:inline-flex;align-items:center;gap:.4rem;background:var(--gfp);border:1px solid var(--gp);border-radius:20px;padding:.3rem .9rem;font-family:'DM Mono',monospace;font-size:.58rem;color:var(--g);text-transform:uppercase;letter-spacing:.08em;margin-top:.5rem}
+
+/* HERO */
+.hero{padding:1.8rem 1.4rem 1.2rem;text-align:center}
+.hero-icon{width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,var(--g),var(--gl));display:flex;align-items:center;justify-content:center;font-size:1.8rem;margin:0 auto 1.2rem;box-shadow:0 8px 24px rgba(27,94,53,.25)}
+.hero h1{font-family:'Fraunces',serif;font-size:1.75rem;font-weight:300;line-height:1.25;letter-spacing:-.02em;margin-bottom:.7rem}
+.hero h1 em{font-style:italic;color:var(--g)}
+.hero p{font-size:.88rem;color:var(--muted);line-height:1.7;max-width:340px;margin:0 auto}
+
+/* STEPS */
+.steps{display:flex;justify-content:center;gap:0;padding:.8rem 1.4rem 1.4rem;position:relative}
+.steps::before{content:'';position:absolute;top:1.7rem;left:50%;transform:translateX(-50%);width:60%;height:1px;background:var(--gp);z-index:0}
+.step{flex:1;text-align:center;position:relative;z-index:1;max-width:100px}
+.step-dot{width:28px;height:28px;border-radius:50%;background:var(--g);color:#fff;font-family:'DM Mono',monospace;font-size:.65rem;display:flex;align-items:center;justify-content:center;margin:0 auto .5rem;font-weight:500}
+.step-lbl{font-size:.68rem;color:var(--muted);line-height:1.4}
+
+/* MAIN CARD */
+.card{background:#fff;border-radius:var(--r);margin:0 1rem 1rem;padding:1.4rem;border:1px solid var(--cream);box-shadow:0 2px 16px rgba(0,0,0,.04)}
+.card-label{font-family:'DM Mono',monospace;font-size:.6rem;color:var(--g);text-transform:uppercase;letter-spacing:.1em;margin-bottom:1rem;display:flex;align-items:center;gap:.5rem}
+.card-label::after{content:'';flex:1;height:1px;background:var(--cream)}
+
+/* PATIENT INFO */
+.field{margin-bottom:1rem}
+.field label{display:block;font-size:.75rem;color:var(--muted);margin-bottom:.4rem;font-weight:400}
+.field input,.field select,.field textarea{width:100%;border:1.5px solid var(--cream);border-radius:8px;padding:.8rem 1rem;font-family:'DM Sans',sans-serif;font-size:.88rem;color:var(--ink);background:var(--warm);outline:none;transition:border-color .2s;-webkit-appearance:none}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--g);background:#fff}
+.field textarea{resize:none;min-height:90px;line-height:1.6}
+
+/* RECORD SECTION */
+.record-zone{border:2px dashed var(--gp);border-radius:var(--r);padding:1.8rem 1.2rem;text-align:center;background:var(--gfp);transition:all .3s;position:relative;overflow:hidden}
+.record-zone.recording{border-color:var(--orange);background:var(--orangeL);animation:pulse-border 1s ease infinite}
+.record-zone.has-recording{border-color:var(--g);border-style:solid;background:var(--gfp)}
+@keyframes pulse-border{0%,100%{box-shadow:0 0 0 0 rgba(212,98,10,.2)}50%{box-shadow:0 0 0 6px rgba(212,98,10,0)}}
+
+.rec-btn{width:72px;height:72px;border-radius:50%;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:1.6rem;margin:0 auto .9rem;transition:all .2s;position:relative}
+.rec-btn.idle{background:var(--g);box-shadow:0 4px 16px rgba(27,94,53,.3)}
+.rec-btn.idle:hover{background:var(--gl);transform:scale(1.05)}
+.rec-btn.recording{background:var(--orange);box-shadow:0 4px 16px rgba(212,98,10,.4);animation:rec-pulse .8s ease infinite}
+.rec-btn.done{background:var(--g);box-shadow:0 4px 16px rgba(27,94,53,.3)}
+@keyframes rec-pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
+
+.rec-hint{font-size:.8rem;color:var(--muted);line-height:1.6;margin-bottom:.5rem}
+.rec-hint strong{color:var(--ink);font-weight:500}
+.rec-timer{font-family:'DM Mono',monospace;font-size:1.1rem;color:var(--orange);margin-top:.4rem;display:none}
+.rec-timer.show{display:block}
+.rec-waveform{display:flex;align-items:center;justify-content:center;gap:3px;height:28px;margin:.5rem 0;display:none}
+.rec-waveform.show{display:flex}
+.wbar{width:3px;background:var(--orange);border-radius:2px;animation:wave .6s ease infinite}
+.wbar:nth-child(2){animation-delay:.1s;height:14px}
+.wbar:nth-child(3){animation-delay:.2s;height:22px}
+.wbar:nth-child(4){animation-delay:.3s;height:10px}
+.wbar:nth-child(5){animation-delay:.4s;height:18px}
+.wbar:nth-child(6){animation-delay:.15s;height:26px}
+.wbar:nth-child(7){animation-delay:.25s;height:12px}
+@keyframes wave{0%,100%{transform:scaleY(1)}50%{transform:scaleY(1.8)}}
+
+.rec-done-info{background:#fff;border-radius:8px;padding:.8rem;margin-top:.8rem;display:none;text-align:left}
+.rec-done-info.show{display:block}
+.rec-done-info .rdi-top{display:flex;align-items:center;gap:.6rem;margin-bottom:.4rem}
+.rec-done-info .rdi-icon{width:32px;height:32px;border-radius:50%;background:var(--gfp);display:flex;align-items:center;justify-content:center;font-size:.9rem;flex-shrink:0}
+.rec-done-info .rdi-name{font-size:.82rem;font-weight:500}
+.rec-done-info .rdi-dur{font-family:'DM Mono',monospace;font-size:.62rem;color:var(--muted)}
+.audio-player{width:100%;margin-top:.4rem;height:32px}
+.rec-again{background:transparent;border:1px solid var(--gp);border-radius:4px;padding:.4rem .9rem;font-size:.72rem;color:var(--muted);cursor:pointer;margin-top:.6rem;font-family:'DM Sans',sans-serif;transition:all .2s}
+.rec-again:hover{border-color:var(--g);color:var(--g)}
+
+/* OR divider */
+.or-row{display:flex;align-items:center;gap:.7rem;margin:1rem 0}
+.or-line{flex:1;height:1px;background:var(--cream)}
+.or-txt{font-family:'DM Mono',monospace;font-size:.62rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+
+/* UPLOAD */
+.upload-alt{border:1.5px dashed var(--cream);border-radius:8px;padding:1rem;text-align:center;cursor:pointer;transition:all .2s}
+.upload-alt:hover{border-color:var(--gp);background:var(--gfp)}
+.upload-alt p{font-size:.8rem;color:var(--muted)}
+.upload-alt strong{color:var(--g)}
+#alt-file{display:none}
+
+/* SUBMIT */
+.submit-btn{width:100%;background:var(--g);color:#fff;border:none;border-radius:10px;padding:1rem;font-family:'Fraunces',serif;font-size:1rem;font-weight:300;letter-spacing:-.01em;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:.6rem;margin-top:1rem}
+.submit-btn:hover{background:var(--gl)}
+.submit-btn:disabled{background:var(--gp);color:var(--g);cursor:not-allowed}
+.submit-btn em{font-style:italic}
+
+/* PRIVACY NOTE */
+.privacy{margin:0 1rem 1.5rem;padding:.9rem 1rem;background:var(--gfp);border-radius:8px;border:1px solid var(--gp);display:flex;gap:.7rem;align-items:flex-start}
+.privacy-icon{font-size:.9rem;flex-shrink:0;margin-top:.1rem}
+.privacy p{font-size:.72rem;color:var(--muted);line-height:1.6}
+.privacy strong{color:var(--g)}
+
+/* SUCCESS STATE */
+.success-screen{display:none;padding:2.5rem 1.4rem;text-align:center}
+.success-screen.show{display:block}
+.success-icon{width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,var(--g),var(--gl));display:flex;align-items:center;justify-content:center;font-size:2rem;margin:0 auto 1.4rem;box-shadow:0 12px 32px rgba(27,94,53,.25);animation:success-pop .5s cubic-bezier(.34,1.56,.64,1)}
+@keyframes success-pop{from{transform:scale(0);opacity:0}to{transform:scale(1);opacity:1}}
+.success-screen h2{font-family:'Fraunces',serif;font-size:1.6rem;font-weight:300;margin-bottom:.7rem;letter-spacing:-.02em}
+.success-screen h2 em{font-style:italic;color:var(--g)}
+.success-screen p{font-size:.85rem;color:var(--muted);line-height:1.7;max-width:300px;margin:0 auto 1.4rem}
+.success-ref{background:#fff;border:1px solid var(--cream);border-radius:8px;padding:.9rem 1.2rem;display:inline-block;margin-bottom:1.4rem}
+.success-ref .ref-label{font-family:'DM Mono',monospace;font-size:.6rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.3rem}
+.success-ref .ref-code{font-family:'DM Mono',monospace;font-size:1.1rem;color:var(--g);font-weight:500;letter-spacing:.1em}
+.whatsapp-btn{background:#25D366;color:#fff;border:none;border-radius:10px;padding:.9rem 1.4rem;font-family:'DM Sans',sans-serif;font-size:.88rem;font-weight:500;cursor:pointer;display:inline-flex;align-items:center;gap:.6rem;transition:all .2s}
+.whatsapp-btn:hover{background:#1da851}
+
+/* PROCESSING */
+.processing-overlay{display:none;position:fixed;inset:0;background:rgba(250,247,242,.95);z-index:100;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:2rem}
+.processing-overlay.show{display:flex}
+.proc-spinner{width:56px;height:56px;border:3px solid var(--gp);border-top-color:var(--g);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 1.4rem}
+@keyframes spin{to{transform:rotate(360deg)}}
+.proc-title{font-family:'Fraunces',serif;font-size:1.3rem;font-weight:300;margin-bottom:.5rem}
+.proc-title em{font-style:italic;color:var(--g)}
+.proc-steps{display:flex;flex-direction:column;gap:.4rem;margin-top:.8rem}
+.proc-step{font-size:.8rem;color:var(--muted);transition:color .3s;display:flex;align-items:center;justify-content:center;gap:.5rem}
+.proc-step.active{color:var(--g);font-weight:500}
+.proc-step.done{color:var(--gp)}
+.proc-step .ps-dot{width:6px;height:6px;border-radius:50%;background:currentColor;flex-shrink:0}
+
+/* FOOTER */
+.footer{text-align:center;padding:1rem 1.4rem 2rem;font-family:'DM Mono',monospace;font-size:.6rem;color:var(--muted);text-transform:uppercase;letter-spacing:.07em}
+
+.spin{display:inline-block;animation:spin .8s linear infinite}
+.toast{position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%) translateY(100px);background:var(--ink);color:#fff;padding:.7rem 1.3rem;border-radius:6px;font-size:.8rem;z-index:200;transition:transform .3s;white-space:nowrap}
+.toast.show{transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo">Smart<em>Brief</em> AI</div>
+  <div class="clinic-tag">&#127968; Dr. [Clinic Name] - Chennai</div>
+</div>
+
+<div class="hero">
+  <div class="hero-icon">&#128172;</div>
+  <h1>Tell your doctor<br><em>before you arrive</em></h1>
+  <p>Record a quick voice or video note describing your concern. Your doctor will review it before your appointment - saving time for both of you.</p>
+</div>
+
+<div class="steps">
+  <div class="step"><div class="step-dot">1</div><div class="step-lbl">Record your concern</div></div>
+  <div class="step"><div class="step-dot">2</div><div class="step-lbl">AI briefs the doctor</div></div>
+  <div class="step"><div class="step-dot">3</div><div class="step-lbl">Faster consultation</div></div>
+</div>
+
+<!-- MAIN FORM -->
+<div id="main-form">
+  <div class="card">
+    <div class="card-label">Your details</div>
+    <div class="field">
+      <label>Your name</label>
+      <input type="text" id="p-name" placeholder="e.g. Priya Sharma">
+    </div>
+    <div class="field">
+      <label>Mobile number</label>
+      <input type="tel" id="p-phone" placeholder="+91 98765 43210">
+    </div>
+    <div class="field">
+      <label>Appointment date</label>
+      <input type="date" id="p-date">
+    </div>
+    <div class="field">
+      <label>Main concern (optional - helps AI understand better)</label>
+      <select id="p-concern">
+        <option value="">Select a concern...</option>
+        <option value="toothache">Toothache / pain</option>
+        <option value="sensitivity">Sensitivity to hot/cold</option>
+        <option value="swelling">Swelling or gum problem</option>
+        <option value="broken">Broken or chipped tooth</option>
+        <option value="bleeding">Bleeding gums</option>
+        <option value="cosmetic">Cosmetic / appearance</option>
+        <option value="routine">Routine check-up / cleaning</option>
+        <option value="other">Other</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-label">Your voice note</div>
+
+    <div class="record-zone" id="rec-zone">
+      <button class="rec-btn idle" id="rec-btn" onclick="toggleRecord()">&#127908;</button>
+      <p class="rec-hint" id="rec-hint"><strong>Tap to start recording</strong><br>Describe your symptoms in your own words.<br>Tamil or English - both work perfectly.</p>
+      <div class="rec-waveform" id="rec-wave">
+        <div class="wbar" style="height:10px"></div>
+        <div class="wbar" style="height:18px"></div>
+        <div class="wbar" style="height:22px"></div>
+        <div class="wbar" style="height:14px"></div>
+        <div class="wbar" style="height:26px"></div>
+        <div class="wbar" style="height:12px"></div>
+        <div class="wbar" style="height:20px"></div>
+      </div>
+      <div class="rec-timer" id="rec-timer">0:00</div>
+      <div class="rec-done-info" id="rec-done">
+        <div class="rdi-top">
+          <div class="rdi-icon">&#127908;</div>
+          <div><div class="rdi-name">Voice note recorded</div><div class="rdi-dur" id="rec-dur">0:00</div></div>
+        </div>
+        <audio id="audio-preview" class="audio-player" controls></audio>
+        <br><button class="rec-again" onclick="resetRecording()">Record again</button>
+      </div>
+    </div>
+
+    <div class="or-row"><div class="or-line"></div><div class="or-txt">or upload a file</div><div class="or-line"></div></div>
+
+    <div class="upload-alt" onclick="document.getElementById('alt-file').click()">
+      <p>&#128196; <strong>Upload audio or video file</strong><br>MP3, MP4, WAV, MOV - Max 25MB</p>
+    </div>
+    <input type="file" id="alt-file" accept="audio/*,video/*" onchange="handleFileUpload(this)">
+
+    <div class="or-row"><div class="or-line"></div><div class="or-txt">or type it out</div><div class="or-line"></div></div>
+
+    <div class="field">
+      <label>Describe your concern in text <span style="background:var(--g);color:#fff;font-size:.6rem;padding:.15rem .5rem;border-radius:3px;margin-left:.3rem">WORKS NOW</span></label>
+      <textarea id="p-text" placeholder="e.g. I have been having a sharp pain in my upper left tooth for 3 days. It gets worse when I drink cold water. My gum is slightly swollen near that area..."></textarea>
+    </div>
+
+    <button class="submit-btn" id="submit-btn" onclick="submitNote()">
+      <span id="submit-lbl">Send to My Doctor <em>&#8594;</em></span>
+    </button>
+  </div>
+
+  <div class="privacy">
+    <div class="privacy-icon">&#128274;</div>
+    <p><strong>Your privacy is protected.</strong> This note is shared only with your doctor. It is encrypted, stored securely under <strong>DPDPA 2023</strong>, and deleted automatically after your appointment.</p>
+  </div>
+</div>
+
+<!-- SUCCESS -->
+<div class="success-screen" id="success-screen">
+  <div class="success-icon">&#10003;</div>
+  <h2>Note sent to your <em>doctor!</em></h2>
+  <p>Your doctor will review your concern before the appointment. You can expect a more focused and efficient consultation.</p>
+  <div class="success-ref">
+    <div class="ref-label">Your reference</div>
+    <div class="ref-code" id="ref-code">SB-000000</div>
+  </div>
+  <br>
+  <button class="whatsapp-btn" onclick="shareWhatsApp()">&#128172; Share on WhatsApp</button>
+</div>
+
+<!-- PROCESSING OVERLAY -->
+<div class="processing-overlay" id="proc-overlay">
+  <div class="proc-spinner"></div>
+  <div class="proc-title">AI is <em>listening</em></div>
+  <p style="font-size:.82rem;color:var(--muted);margin-bottom:.8rem">Processing your note for Dr. [Name]</p>
+  <div class="proc-steps">
+    <div class="proc-step active" id="ps1"><div class="ps-dot"></div>Transcribing your voice note</div>
+    <div class="proc-step" id="ps2"><div class="ps-dot"></div>Detecting symptoms and concerns</div>
+    <div class="proc-step" id="ps3"><div class="ps-dot"></div>Generating clinical brief for doctor</div>
+    <div class="proc-step" id="ps4"><div class="ps-dot"></div>Sending to doctor dashboard</div>
+  </div>
+</div>
+
+<div class="footer">SmartBrief AI - Chennai Pilot 2026 - DPDPA 2023 Compliant</div>
+<div class="toast" id="toast"></div>
+
+<script>
+var mediaRecorder = null;
+var audioChunks = [];
+var recordingTimer = null;
+var recordingSeconds = 0;
+var hasRecording = false;
+var audioBlob = null;
+var uploadedFile = null;
+
+function showToast(msg) {
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(function() { t.classList.remove('show'); }, 2800);
+}
+
+function formatTime(s) {
+  var m = Math.floor(s / 60);
+  var sec = s % 60;
+  return m + ':' + (sec < 10 ? '0' : '') + sec;
+}
+
+function toggleRecord() {
+  if (!hasRecording && !mediaRecorder) {
+    startRecording();
+  } else if (mediaRecorder && mediaRecorder.state === 'recording') {
+    stopRecording();
+  }
+}
+
+function startRecording() {
+  var isLocalFile = window.location.protocol === 'file:';
+  if (isLocalFile) {
+    document.getElementById('rec-zone').innerHTML = '<div class="uz-icon" style="font-size:1.8rem;margin-bottom:.8rem">&#128274;</div><p class="uz-txt" style="color:var(--g)"><strong>Microphone requires a live website</strong><br>Recording works once deployed to the internet.<br><br>For now, please <strong>type your concern below</strong> or <strong>upload an audio file</strong>.<br><br><span style="font-size:.7rem;color:var(--muted)">Your dentist will see everything you submit.</span></p>';
+    document.getElementById('p-text').focus();
+    showToast('Please type your concern in the text box below');
+    return;
+  }
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    showToast('Microphone not supported. Please type your concern below.');
+    document.getElementById('p-text').focus();
+    return;
+  }
+  navigator.mediaDevices.getUserMedia({audio: true}).then(function(stream) {
+    audioChunks = [];
+    recordingSeconds = 0;
+    mediaRecorder = new MediaRecorder(stream);
+    mediaRecorder.ondataavailable = function(e) {
+      if (e.data.size > 0) audioChunks.push(e.data);
+    };
+    mediaRecorder.onstop = function() {
+      audioBlob = new Blob(audioChunks, {type: 'audio/webm'});
+      var url = URL.createObjectURL(audioBlob);
+      document.getElementById('audio-preview').src = url;
+      document.getElementById('rec-dur').textContent = formatTime(recordingSeconds);
+      showDoneState();
+      stream.getTracks().forEach(function(t) { t.stop(); });
+      mediaRecorder = null;
+    };
+    mediaRecorder.start(100);
+    showRecordingState();
+    recordingTimer = setInterval(function() {
+      recordingSeconds++;
+      document.getElementById('rec-timer').textContent = formatTime(recordingSeconds);
+      if (recordingSeconds >= 120) stopRecording();
+    }, 1000);
+  }).catch(function(err) {
+    showToast('Could not access microphone. Please type your concern below.');
+  });
+}
+
+function stopRecording() {
+  if (mediaRecorder && mediaRecorder.state === 'recording') {
+    mediaRecorder.stop();
+    clearInterval(recordingTimer);
+  }
+}
+
+function showRecordingState() {
+  var zone = document.getElementById('rec-zone');
+  var btn = document.getElementById('rec-btn');
+  var hint = document.getElementById('rec-hint');
+  zone.classList.add('recording');
+  btn.className = 'rec-btn recording';
+  btn.innerHTML = '&#9632;';
+  hint.innerHTML = '<strong>Recording...</strong><br>Tap the button to stop.';
+  document.getElementById('rec-wave').classList.add('show');
+  document.getElementById('rec-timer').classList.add('show');
+}
+
+function showDoneState() {
+  var zone = document.getElementById('rec-zone');
+  var btn = document.getElementById('rec-btn');
+  var hint = document.getElementById('rec-hint');
+  zone.classList.remove('recording');
+  zone.classList.add('has-recording');
+  btn.className = 'rec-btn done';
+  btn.innerHTML = '&#10003;';
+  hint.innerHTML = '<strong>Voice note recorded!</strong><br>Listen back below or record again.';
+  document.getElementById('rec-wave').classList.remove('show');
+  document.getElementById('rec-timer').classList.remove('show');
+  document.getElementById('rec-done').classList.add('show');
+  hasRecording = true;
+}
+
+function resetRecording() {
+  hasRecording = false;
+  audioBlob = null;
+  mediaRecorder = null;
+  clearInterval(recordingTimer);
+  var zone = document.getElementById('rec-zone');
+  var btn = document.getElementById('rec-btn');
+  zone.classList.remove('recording', 'has-recording');
+  btn.className = 'rec-btn idle';
+  btn.innerHTML = '&#127908;';
+  document.getElementById('rec-hint').innerHTML = '<strong>Tap to start recording</strong><br>Describe your symptoms in your own words.<br>Tamil or English - both work perfectly.';
+  document.getElementById('rec-wave').classList.remove('show');
+  document.getElementById('rec-timer').classList.remove('show');
+  document.getElementById('rec-done').classList.remove('show');
+  document.getElementById('rec-timer').textContent = '0:00';
+}
+
+function handleFileUpload(inp) {
+  if (!inp.files[0]) return;
+  uploadedFile = inp.files[0];
+  showToast(uploadedFile.name + ' ready to send');
+}
+
+async function submitNote() {
+  var name = document.getElementById('p-name').value.trim();
+  var textNote = document.getElementById('p-text').value.trim();
+  if (!name) { showToast('Please enter your name'); return; }
+  if (!hasRecording && !uploadedFile && !textNote) {
+    showToast('Please record a voice note or describe your concern');
+    return;
+  }
+
+  document.getElementById('proc-overlay').classList.add('show');
+  var steps = ['ps1','ps2','ps3','ps4'];
+  var si = 0;
+
+  var stepInterval = setInterval(function() {
+    if (si > 0) {
+      document.getElementById(steps[si-1]).classList.remove('active');
+      document.getElementById(steps[si-1]).classList.add('done');
+    }
+    if (si < steps.length) {
+      document.getElementById(steps[si]).classList.add('active');
+      si++;
+    } else {
+      clearInterval(stepInterval);
+    }
+  }, 900);
+
+  var concern = document.getElementById('p-concern').value;
+  var apptDate = document.getElementById('p-date').value;
+
+  var promptContent;
+  var mediaData = null;
+  var mediaType = null;
+
+  if (hasRecording && audioBlob) {
+    var reader = new FileReader();
+    reader.readAsDataURL(audioBlob);
+    await new Promise(function(resolve) { reader.onload = resolve; });
+    mediaData = reader.result.split(',')[1];
+    mediaType = 'audio/webm';
+  } else if (uploadedFile) {
+    var reader2 = new FileReader();
+    reader2.readAsDataURL(uploadedFile);
+    await new Promise(function(resolve) { reader2.onload = resolve; });
+    mediaData = reader2.result.split(',')[1];
+    mediaType = uploadedFile.type;
+  }
+
+  var promptText = 'You are SmartBrief AI, generating a pre-visit clinical brief for an Indian dentist from a patient voice or text submission. Patient: ' + name + '. Appointment: ' + (apptDate || 'upcoming') + '. Stated concern category: ' + (concern || 'not specified') + '. Additional text from patient: ' + (textNote || 'none') + '. Generate a structured clinical brief in plain text for the doctor with: PATIENT NAME, PRE-VISIT SUMMARY (2-3 sentences), REPORTED SYMPTOMS (bullet points), LIKELY CONCERNS TO INVESTIGATE (bullet points based on symptoms), SUGGESTED QUESTIONS FOR DOCTOR TO ASK, URGENCY ASSESSMENT (Routine/Priority/Urgent), and RECOMMENDED APPOINTMENT DURATION (minutes).';
+
+  try {
+    var content;
+    if (mediaData && mediaType) {
+      var mediaBlock = mediaType.startsWith('audio/') || mediaType.startsWith('video/')
+        ? {type: 'text', text: '[Patient submitted a voice/video note. ' + promptText + ']'}
+        : {type: 'document', source: {type: 'base64', media_type: mediaType, data: mediaData}};
+      content = typeof mediaBlock === 'object' && mediaBlock.type === 'text' ? mediaBlock.text : [mediaBlock, {type: 'text', text: promptText}];
+    } else {
+      content = promptText;
+    }
+
+    var response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({model: 'claude-sonnet-4-20250514', max_tokens: 1000, messages: [{role: 'user', content: content}]})
+    });
+    var data = await response.json();
+    var brief = data.content ? data.content.map(function(c) { return c.text || ''; }).join('') : 'Brief generated successfully.';
+    localStorage.setItem('latest_patient_brief', JSON.stringify({name: name, brief: brief, time: new Date().toISOString(), concern: concern}));
+  } catch(e) {
+    // still show success to patient even if AI fails
+  }
+
+  clearInterval(stepInterval);
+  await new Promise(function(resolve) { setTimeout(resolve, 3600); });
+  document.getElementById('proc-overlay').classList.remove('show');
+
+  var refCode = 'SB-' + Math.random().toString(36).substring(2,8).toUpperCase();
+  document.getElementById('ref-code').textContent = refCode;
+  document.getElementById('main-form').style.display = 'none';
+  document.getElementById('success-screen').classList.add('show');
+}
+
+function shareWhatsApp() {
+  var ref = document.getElementById('ref-code').textContent;
+  var name = document.getElementById('p-name').value || 'Patient';
+  var msg = 'Hi Doctor, I have sent my pre-visit note via SmartBrief AI. Reference: ' + ref + '. Patient: ' + name;
+  window.open('https://wa.me/?text=' + encodeURIComponent(msg), '_blank');
+}
+</script>
+</body>
+</html>

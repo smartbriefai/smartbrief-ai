@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SmartBrief AI - Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,600;1,300&family=DM+Mono:wght@400;500&family=Sora:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+:root{--iv:#F5F2EB;--cr:#EAE4D8;--sg:#2E6B3E;--sgl:#5E9B6E;--sgp:#BDD4C2;--dk:#141A12;--md:#4A4E46;--gd:#C08B10;--wh:#FFF;--sf:#E07B00;--sfp:#FEF0DC;--r:8px}
+body{background:#F0EDE6;color:var(--dk);font-family:'Sora',sans-serif;font-weight:300;overflow-x:hidden}
+#auth{position:fixed;inset:0;background:linear-gradient(140deg,var(--sg) 0%,#1a3d22 100%);display:flex;align-items:center;justify-content:center;z-index:9000;padding:1rem}
+.auth-box{background:#fff;border-radius:12px;padding:2.5rem 2rem;width:100%;max-width:400px;box-shadow:0 32px 80px rgba(0,0,0,.25)}
+.auth-logo{font-family:'Cormorant Garamond',serif;font-size:1.8rem;font-weight:600;color:var(--dk);text-align:center;margin-bottom:.3rem}
+.auth-logo em{font-style:italic;color:var(--sg)}
+.auth-sub{font-family:'DM Mono',monospace;font-size:.65rem;color:var(--md);text-align:center;text-transform:uppercase;letter-spacing:.1em;margin-bottom:2rem}
+.auth-label{font-size:.78rem;color:var(--md);margin-bottom:.4rem;display:block;margin-top:1rem}
+.auth-inp{width:100%;border:1.5px solid var(--cr);border-radius:4px;padding:.82rem 1rem;font-family:'Sora',sans-serif;font-size:.86rem;outline:none;transition:border-color .2s;background:var(--iv)}
+.auth-inp:focus{border-color:var(--sg)}
+.auth-btn{width:100%;margin-top:1.4rem;background:var(--sg);color:#fff;border:none;border-radius:4px;padding:.95rem;font-family:'Sora',sans-serif;font-size:.9rem;font-weight:600;cursor:pointer;transition:background .2s}
+.auth-btn:hover{background:var(--dk)}
+.auth-demo{text-align:center;margin-top:1rem;font-size:.75rem;color:var(--md)}
+.auth-demo span{color:var(--sg);cursor:pointer;font-weight:600}
+.auth-pilot{background:var(--sfp);border:1px solid rgba(224,123,0,.2);border-radius:4px;padding:.8rem;margin-top:1.2rem;text-align:center;font-size:.75rem;color:var(--sf)}
+#app{display:none;min-height:100vh;flex-direction:column}
+#app.show{display:flex}
+.topbar{background:#fff;border-bottom:1px solid var(--cr);padding:.7rem 1rem;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200}
+.tb-logo{font-family:'Cormorant Garamond',serif;font-size:1.2rem;font-weight:600}
+.tb-logo em{font-style:italic;color:var(--sg)}
+.tb-right{display:flex;align-items:center;gap:.8rem}
+.tb-badge{background:var(--sgp);color:var(--sg);font-family:'DM Mono',monospace;font-size:.58rem;padding:.25rem .6rem;border-radius:2px;text-transform:uppercase;letter-spacing:.08em}
+.tb-avatar{width:34px;height:34px;border-radius:50%;background:var(--sg);color:#fff;display:flex;align-items:center;justify-content:center;font-size:.8rem;font-weight:600;cursor:pointer}
+.tb-menu{display:none;position:fixed;top:56px;right:1rem;background:#fff;border:1px solid var(--cr);border-radius:8px;box-shadow:0 8px 32px rgba(0,0,0,.1);z-index:300;min-width:180px}
+.tb-menu.open{display:block}
+.tb-menu-item{padding:.8rem 1.2rem;font-size:.82rem;cursor:pointer;transition:background .15s;display:flex;align-items:center;gap:.6rem}
+.tb-menu-item:hover{background:var(--iv)}
+.tb-menu-item.danger{color:var(--sf)}
+.main{display:flex;flex:1;flex-direction:column}
+.nav-tabs{background:#fff;border-bottom:1px solid var(--cr);display:flex;overflow-x:auto;scrollbar-width:none;padding:0 1rem}
+.nav-tabs::-webkit-scrollbar{display:none}
+.nav-hint{background:linear-gradient(to left,#fff 60%,transparent);position:absolute;right:0;top:0;bottom:0;width:32px;pointer-events:none;z-index:10}
+.nav-wrap{position:relative;overflow:hidden}
+.ntab{flex-shrink:0;padding:.85rem .9rem;font-size:.72rem;font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:.08em;color:var(--md);background:none;border:none;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap;transition:all .2s}
+.ntab.active{color:var(--sg);border-bottom-color:var(--sg)}
+.ntab:hover:not(.active){color:var(--dk)}
+.page{display:none;padding:1.2rem 1rem;max-width:900px;width:100%;margin:0 auto}
+.page.active{display:block}
+.greeting{margin-bottom:1.5rem}
+.greeting h2{font-family:'Cormorant Garamond',serif;font-size:1.8rem;font-weight:300;letter-spacing:-.02em}
+.greeting h2 em{font-style:italic;color:var(--sg)}
+.greeting p{font-size:.82rem;color:var(--md);margin-top:.3rem}
+.stats-row{display:grid;grid-template-columns:repeat(2,1fr);gap:.75rem;margin-bottom:1.5rem}
+.stat-card{background:#fff;border:1px solid var(--cr);border-radius:var(--r);padding:1.1rem;position:relative;overflow:hidden}
+.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--sg)}
+.stat-n{font-family:'Cormorant Garamond',serif;font-size:2.2rem;font-weight:300;color:var(--sg);line-height:1}
+.stat-l{font-size:.72rem;color:var(--md);margin-top:.3rem;line-height:1.4}
+.stat-d{font-family:'DM Mono',monospace;font-size:.6rem;color:var(--sgl);margin-top:.4rem}
+.section-title{font-family:'Cormorant Garamond',serif;font-size:1.2rem;font-weight:600;margin-bottom:.9rem;display:flex;align-items:center;gap:.6rem}
+.section-title span{font-family:'DM Mono',monospace;font-size:.6rem;color:var(--md);font-weight:400}
+.recent-list{display:flex;flex-direction:column;gap:.6rem}
+.rec-item{background:#fff;border:1px solid var(--cr);border-radius:var(--r);padding:.9rem 1rem;display:flex;align-items:center;gap:.8rem;cursor:pointer;transition:all .2s}
+.rec-item:hover{border-color:var(--sgp);transform:translateX(2px)}
+.rec-icon{width:36px;height:36px;border-radius:6px;background:var(--sgp);display:flex;align-items:center;justify-content:center;font-size:.9rem;flex-shrink:0}
+.rec-info{flex:1;min-width:0}
+.rec-name{font-size:.82rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rec-meta{font-family:'DM Mono',monospace;font-size:.6rem;color:var(--md);margin-top:.15rem}
+.rec-badge{font-family:'DM Mono',monospace;font-size:.58rem;padding:.22rem .55rem;border-radius:2px;flex-shrink:0}
+.rb-sum{background:var(--sgp);color:var(--sg)}
+.rb-fup{background:var(--sfp);color:var(--sf)}
+.rb-doc{background:#E8F0FE;color:#1967D2}
+.qa-grid{display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:1.5rem}
+.qa{background:#fff;border:1px solid var(--cr);border-radius:var(--r);padding:1rem;cursor:pointer;transition:all .2s;text-align:center}
+.qa:hover{border-color:var(--sg);background:rgba(46,107,62,.03)}
+.qa-icon{font-size:1.4rem;margin-bottom:.5rem}
+.qa-label{font-size:.78rem;font-weight:600;color:var(--dk)}
+.qa-desc{font-size:.7rem;color:var(--md);margin-top:.2rem;line-height:1.4}
+.tool-header{margin-bottom:1.4rem}
+.tool-header h3{font-family:'Cormorant Garamond',serif;font-size:1.5rem;font-weight:300}
+.tool-header h3 em{font-style:italic;color:var(--sg)}
+.tool-header p{font-size:.82rem;color:var(--md);margin-top:.3rem;line-height:1.6}
+.input-area{background:#fff;border:1.5px solid var(--cr);border-radius:var(--r);padding:1rem;margin-bottom:.9rem;transition:border-color .2s}
+.input-area:focus-within{border-color:var(--sg)}
+.input-label{font-family:'DM Mono',monospace;font-size:.6rem;color:var(--sg);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.5rem}
+textarea{width:100%;border:none;outline:none;font-family:'Sora',sans-serif;font-size:.83rem;line-height:1.75;color:var(--dk);background:transparent;resize:none;min-height:130px}
+textarea::placeholder{color:rgba(74,78,70,.4)}
+.run-btn{width:100%;background:var(--sg);color:#fff;border:none;border-radius:4px;padding:.9rem;font-family:'Sora',sans-serif;font-size:.86rem;font-weight:600;cursor:pointer;transition:background .2s;display:flex;align-items:center;justify-content:center;gap:.5rem;margin-bottom:1rem}
+.run-btn:hover{background:var(--dk)}.run-btn:disabled{background:var(--sgl);cursor:not-allowed}
+.result-box{background:#fff;border:1px solid var(--sgp);border-radius:var(--r);padding:1.2rem;display:none}
+.result-box.show{display:block}
+.result-lbl{font-family:'DM Mono',monospace;font-size:.6rem;color:var(--sg);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.7rem;display:flex;align-items:center;justify-content:space-between}
+.copy-btn{background:var(--sgp);color:var(--sg);border:none;border-radius:2px;padding:.25rem .6rem;font-size:.6rem;font-family:'DM Mono',monospace;cursor:pointer;letter-spacing:.06em;transition:all .2s}
+.copy-btn:hover{background:var(--sg);color:#fff}
+.result-txt{font-size:.83rem;line-height:1.8;color:var(--dk);white-space:pre-wrap}
+.result-pills{display:flex;flex-wrap:wrap;gap:.35rem;margin-top:.8rem}
+.rpill{background:var(--sgp);color:var(--sg);font-family:'DM Mono',monospace;font-size:.58rem;padding:.22rem .55rem;border-radius:2px}
+.save-btn{margin-top:.9rem;background:transparent;border:1.5px solid var(--sg);color:var(--sg);border-radius:4px;padding:.7rem;font-family:'Sora',sans-serif;font-size:.8rem;font-weight:600;cursor:pointer;width:100%;transition:all .2s}
+.save-btn:hover{background:var(--sg);color:#fff}
+.upload-zone{border:2px dashed var(--sgp);border-radius:var(--r);padding:2.5rem 1rem;text-align:center;cursor:pointer;transition:all .2s;background:#fff;margin-bottom:.9rem}
+.upload-zone:hover{border-color:var(--sg);background:rgba(46,107,62,.03)}
+.uz-icon{font-size:2.2rem;margin-bottom:.6rem}
+.uz-txt{font-size:.82rem;color:var(--md);line-height:1.6}
+.uz-txt strong{color:var(--sg)}
+#ufile{display:none}
+.fu-row{display:grid;gap:.75rem;margin-bottom:.9rem}
+.sel-input{width:100%;border:1.5px solid var(--cr);border-radius:4px;padding:.8rem .9rem;font-family:'Sora',sans-serif;font-size:.83rem;outline:none;transition:border-color .2s;background:var(--iv)}
+.sel-input:focus{border-color:var(--sg)}
+.text-input{width:100%;border:1.5px solid var(--cr);border-radius:4px;padding:.8rem .9rem;font-family:'Sora',sans-serif;font-size:.83rem;outline:none;transition:border-color .2s;background:var(--iv)}
+.text-input:focus{border-color:var(--sg)}
+.hist-item{background:#fff;border:1px solid var(--cr);border-radius:var(--r);padding:1rem;margin-bottom:.7rem;cursor:pointer;transition:all .2s}
+.hist-item:hover{border-color:var(--sgp)}
+.hist-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:.4rem}
+.hist-title{font-size:.84rem;font-weight:600}
+.hist-time{font-family:'DM Mono',monospace;font-size:.6rem;color:var(--md)}
+.hist-preview{font-size:.78rem;color:var(--md);line-height:1.5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hist-tags{display:flex;gap:.35rem;margin-top:.5rem;flex-wrap:wrap}
+.hist-tag{font-family:'DM Mono',monospace;font-size:.57rem;padding:.2rem .5rem;border-radius:2px}
+.analytics-grid{display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:1.4rem}
+.an-card{background:#fff;border:1px solid var(--cr);border-radius:var(--r);padding:1.1rem}
+.an-n{font-family:'Cormorant Garamond',serif;font-size:2rem;font-weight:300;color:var(--sg);line-height:1}
+.an-l{font-size:.73rem;color:var(--md);margin-top:.3rem}
+.an-trend{font-family:'DM Mono',monospace;font-size:.6rem;color:var(--sgl);margin-top:.3rem}
+.bar-chart{background:#fff;border:1px solid var(--cr);border-radius:var(--r);padding:1.1rem;margin-bottom:.75rem}
+.bar-title{font-size:.8rem;font-weight:600;margin-bottom:.9rem}
+.bar-row{display:flex;align-items:center;gap:.7rem;margin-bottom:.55rem}
+.bar-label{font-size:.72rem;color:var(--md);width:60px;flex-shrink:0;text-align:right}
+.bar-track{flex:1;height:8px;background:var(--cr);border-radius:4px;overflow:hidden}
+.bar-fill{height:100%;background:var(--sg);border-radius:4px;transition:width 1.2s ease}
+.bar-val{font-family:'DM Mono',monospace;font-size:.62rem;color:var(--sg);width:30px}
+.settings-section{background:#fff;border:1px solid var(--cr);border-radius:var(--r);padding:1.2rem;margin-bottom:.9rem}
+.ss-title{font-size:.84rem;font-weight:600;padding-bottom:.6rem;border-bottom:1px solid var(--cr);margin-bottom:.8rem}
+.ss-row{display:flex;justify-content:space-between;align-items:center;padding:.6rem 0;border-bottom:1px solid var(--iv)}
+.ss-row:last-child{border-bottom:none}
+.ss-label{font-size:.81rem;color:var(--dk)}
+.ss-desc{font-size:.72rem;color:var(--md);margin-top:.15rem}
+.toggle{width:40px;height:22px;background:var(--cr);border-radius:11px;position:relative;cursor:pointer;transition:background .2s;flex-shrink:0}
+.toggle.on{background:var(--sg)}
+.toggle::after{content:'';position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#fff;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.15)}
+.toggle.on::after{transform:translateX(18px)}
+.plan-badge{background:var(--sgp);color:var(--sg);font-family:'DM Mono',monospace;font-size:.6rem;padding:.25rem .6rem;border-radius:2px}
+.pilot-banner{background:linear-gradient(135deg,var(--sf),#c06800);border-radius:var(--r);padding:1rem 1.2rem;margin-bottom:1.4rem;display:flex;align-items:center;gap:.8rem}
+.pb-icon{font-size:1.4rem;flex-shrink:0}
+.pb-text strong{display:block;color:#fff;font-size:.84rem;margin-bottom:.15rem}
+.pb-text span{font-size:.75rem;color:rgba(255,255,255,.8)}
+.pb-btn{background:#fff;color:var(--sf);border:none;border-radius:2px;padding:.5rem .9rem;font-size:.74rem;font-weight:600;cursor:pointer;flex-shrink:0;font-family:'Sora',sans-serif;transition:all .2s;white-space:nowrap;margin-left:auto}
+.pb-btn:hover{background:var(--dk);color:#fff}
+.spin{display:inline-block;animation:sp .7s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+.toast{position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%) translateY(80px);background:var(--dk);color:#fff;padding:.7rem 1.3rem;border-radius:4px;font-size:.8rem;z-index:9999;transition:transform .3s ease;white-space:nowrap}
+.toast.show{transform:translateX(-50%) translateY(0)}
+.empty{text-align:center;padding:2.5rem 1rem;color:var(--md)}
+.empty-icon{font-size:2.5rem;margin-bottom:.7rem}
+.empty-t{font-family:'Cormorant Garamond',serif;font-size:1.3rem;font-weight:300;margin-bottom:.4rem}
+.empty-d{font-size:.8rem;line-height:1.6}
+@media(min-width:640px){
+  .stats-row{grid-template-columns:repeat(4,1fr)}
+  .analytics-grid{grid-template-columns:repeat(4,1fr)}
+  .qa-grid{grid-template-columns:repeat(4,1fr)}
+  .page{padding:1.8rem 1.5rem}
+  .fu-row{grid-template-columns:1fr 1fr}
+}
+@media(min-width:900px){
+  .page{padding:2rem 2rem}
+  .nav-tabs{padding:0 2rem}
+  .topbar{padding:.7rem 2rem}
+}
+
+.pre-tab{color:var(--sf) !important;position:relative}
+.pre-tab::after{content:'NEW';position:absolute;top:6px;right:2px;background:var(--sf);color:#fff;font-size:.45rem;padding:.1rem .3rem;border-radius:2px;letter-spacing:.06em}
+.pre-tab.active{color:var(--sf) !important;border-bottom-color:var(--sf) !important}
+.brief-card{background:#fff;border:1px solid var(--cr);border-radius:var(--r);padding:1rem;margin-bottom:.75rem;transition:all .2s;cursor:pointer}
+.brief-card:hover{border-color:var(--sgp);box-shadow:0 2px 12px rgba(0,0,0,.06)}
+.brief-card-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:.5rem}
+.brief-patient{font-size:.88rem;font-weight:600}
+.brief-time{font-family:'DM Mono',monospace;font-size:.6rem;color:var(--md)}
+.brief-meta{font-family:'DM Mono',monospace;font-size:.62rem;color:var(--md);margin-bottom:.5rem;display:flex;gap:.6rem;flex-wrap:wrap}
+.brief-urgency{padding:.2rem .55rem;border-radius:2px;font-size:.6rem;font-weight:600}
+.urg-routine{background:var(--sgp);color:var(--sg)}
+.urg-priority{background:var(--sfp);color:var(--sf)}
+.urg-urgent{background:#FDECEA;color:#C62828}
+.brief-preview{font-size:.8rem;color:var(--md);line-height:1.6;margin-bottom:.5rem}
+.brief-full{display:none;font-size:.8rem;line-height:1.8;color:var(--dk);white-space:pre-wrap;margin-top:.7rem;padding-top:.7rem;border-top:1px solid var(--cr)}
+.brief-full.show{display:block}
+.brief-actions{display:flex;gap:.5rem;margin-top:.7rem;flex-wrap:wrap}
+.bact-btn{background:transparent;border:1px solid var(--cr);border-radius:4px;padding:.35rem .7rem;font-size:.72rem;cursor:pointer;font-family:'Sora',sans-serif;color:var(--md);transition:all .2s}
+.bact-btn:hover{border-color:var(--sg);color:var(--sg)}
+.bact-btn.primary{background:var(--sg);color:#fff;border-color:var(--sg)}
+.bact-btn.primary:hover{background:var(--dk)}
+.pv-share-box{background:linear-gradient(135deg,var(--sg),#1a3d22);border-radius:var(--r);padding:1.2rem;margin-bottom:1.2rem;color:#fff}
+.pv-share-box h4{font-family:'Cormorant Garamond',serif;font-size:1.2rem;font-weight:300;margin-bottom:.4rem}
+.pv-share-box h4 em{font-style:italic}
+.pv-share-box p{font-size:.78rem;opacity:.8;margin-bottom:.9rem;line-height:1.6}
+.pv-link-box{background:rgba(255,255,255,.12);border-radius:6px;padding:.6rem .8rem;font-family:'DM Mono',monospace;font-size:.62rem;color:#fff;display:flex;justify-content:space-between;align-items:center;gap:.5rem;margin-bottom:.6rem;word-break:break-all}
+.copy-link-btn{background:#fff;color:var(--sg);border:none;border-radius:3px;padding:.3rem .6rem;font-size:.65rem;cursor:pointer;white-space:nowrap;font-family:'Sora',sans-serif;font-weight:600;flex-shrink:0;transition:all .2s}
+.copy-link-btn:hover{background:var(--sgp)}
+.pv-whatsapp{background:#25D366;color:#fff;border:none;border-radius:6px;padding:.6rem 1rem;font-size:.8rem;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:.4rem;font-family:'Sora',sans-serif;transition:all .2s}
+.pv-whatsapp:hover{background:#1da851}
+.new-dot{width:7px;height:7px;border-radius:50%;background:var(--sf);display:inline-block;margin-left:.3rem;animation:blink 1.2s ease infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+</style>
+</head>
+<body>
+
+<div id="auth">
+  <div class="auth-box">
+    <div class="auth-logo">Smart<em>Brief</em> AI</div>
+    <div class="auth-sub">Chennai Pilot Programme</div>
+    <label class="auth-label">Email address</label>
+    <input class="auth-inp" id="a-email" type="email" placeholder="doctor@yourclinic.com" value="dr.pilot@smartbrief.ai">
+    <label class="auth-label">Password</label>
+    <input class="auth-inp" id="a-pass" type="password" placeholder="Your password" value="pilot2026">
+    <button class="auth-btn" id="login-btn" onclick="doLogin()">Sign In to Dashboard</button>
+    <div class="auth-demo">New here? <span onclick="doLogin()">Use pilot credentials above</span></div>
+    <div class="auth-pilot">Chennai Pilot: Use email + password above to try the full dashboard</div>
+  </div>
+</div>
+
+<div id="app">
+  <div class="topbar">
+    <div class="tb-logo">Smart<em>Brief</em> AI</div>
+    <div class="tb-right">
+      <span class="tb-badge">Chennai Pilot</span>
+      <div class="tb-avatar" onclick="toggleMenu()" id="av">Dr</div>
+    </div>
+  </div>
+  <div class="tb-menu" id="tb-menu">
+    <div class="tb-menu-item">&#128100; Dr. Pilot Account</div>
+    <div class="tb-menu-item">&#9881; Settings</div>
+    <div class="tb-menu-item">&#128172; WhatsApp Support</div>
+    <div class="tb-menu-item danger" onclick="doLogout()">&#128275; Sign Out</div>
+  </div>
+
+  <div class="nav-wrap"><div class="nav-hint"></div><div class="nav-tabs">
+    <button class="ntab active" onclick="showPage('home',this)">Dashboard</button>
+    <button class="ntab" onclick="showPage('summarise',this)">Summarise</button>
+    <button class="ntab" onclick="showPage('upload',this)">Upload Doc</button>
+    <button class="ntab" onclick="showPage('followup',this)">Follow-up</button>
+    <button class="ntab" onclick="showPage('history',this)">History</button>
+    <button class="ntab" onclick="showPage('analytics',this)">Analytics</button>
+    <button class="ntab" onclick="showPage('settings',this)">Settings</button>
+    <button class="ntab pre-tab" onclick="showPage('previsit',this)">Pre-Visit &#9679;</button>
+  </div></div>
+
+  <div class="main">
+
+    <div class="page active" id="page-home">
+      <div class="pilot-banner">
+        <div class="pb-icon">&#127881;</div>
+        <div class="pb-text">
+          <strong>Welcome to the Chennai Pilot Programme!</strong>
+          <span>3 months free access. Your feedback shapes the product.</span>
+        </div>
+        <button class="pb-btn" onclick="showPage('summarise',document.querySelectorAll('.ntab')[1])">Try AI Now</button>
+      </div>
+      <div class="greeting">
+        <h2>Good morning, <em>Doctor</em></h2>
+        <p>Practice summary for Sunday 8 March 2026</p>
+      </div>
+      <div class="stats-row">
+        <div class="stat-card"><div class="stat-n" id="s1">0</div><div class="stat-l">Documents processed</div><div class="stat-d">This session</div></div>
+        <div class="stat-card"><div class="stat-n" id="s2">0h</div><div class="stat-l">Hours saved</div><div class="stat-d">At 10 min per doc</div></div>
+        <div class="stat-card"><div class="stat-n" id="s3">0</div><div class="stat-l">Letters drafted</div><div class="stat-d">Ready to send</div></div>
+        <div class="stat-card"><div class="stat-n">98%</div><div class="stat-l">AI accuracy rate</div><div class="stat-d">Clinical grade</div></div>
+      </div>
+      <div class="section-title">Quick Actions <span>What would you like to do?</span></div>
+      <div class="qa-grid">
+        <div class="qa" onclick="showPage('summarise',document.querySelectorAll('.ntab')[1])"><div class="qa-icon">&#128203;</div><div class="qa-label">Summarise Notes</div><div class="qa-desc">Paste consultation notes for AI summary</div></div>
+        <div class="qa" onclick="showPage('upload',document.querySelectorAll('.ntab')[2])"><div class="qa-icon">&#128196;</div><div class="qa-label">Analyse Document</div><div class="qa-desc">Upload referral, form, or report</div></div>
+        <div class="qa" onclick="showPage('followup',document.querySelectorAll('.ntab')[3])"><div class="qa-icon">&#9993;</div><div class="qa-label">Draft Follow-up</div><div class="qa-desc">Generate patient letter instantly</div></div>
+        <div class="qa" onclick="showPage('analytics',document.querySelectorAll('.ntab')[5])"><div class="qa-icon">&#128202;</div><div class="qa-label">View Analytics</div><div class="qa-desc">See time saved and productivity</div></div>
+      </div>
+      <div class="section-title">Recent Activity <span>Last actions</span></div>
+      <div class="recent-list" id="rec-list">
+        <div class="empty"><div class="empty-icon">&#128203;</div><div class="empty-t">No activity yet</div><div class="empty-d">Process your first document to see activity here</div></div>
+      </div>
+    </div>
+
+    <div class="page" id="page-summarise">
+      <div class="tool-header">
+        <h3>Clinical Notes <em>Summariser</em></h3>
+        <p>Paste any patient consultation notes, treatment records, or clinical observations. AI extracts key findings and action items in seconds.</p>
+      </div>
+      <div class="input-area">
+        <div class="input-label">Patient Notes / Consultation Transcript</div>
+        <textarea id="sum-in" placeholder="Paste your clinical notes here..."></textarea>
+      </div>
+      <button class="run-btn" id="sum-btn" onclick="runSummarise()"><span id="sum-lbl">Summarise Clinical Notes</span></button>
+      <div class="result-box" id="sum-out">
+        <div class="result-lbl">AI Clinical Summary <button class="copy-btn" onclick="copyResult('sum-txt')">Copy</button></div>
+        <div class="result-txt" id="sum-txt"></div>
+        <div class="result-pills" id="sum-pills"></div>
+        <button class="save-btn" onclick="saveToHistory('summary')">Save to History</button>
+      </div>
+    </div>
+
+    <div class="page" id="page-upload">
+      <div class="tool-header">
+        <h3>Document <em>Intelligence</em></h3>
+        <p>Upload any patient form, referral letter, X-ray report, insurance document, or prescription. AI reads and extracts all key information.</p>
+      </div>
+      <div class="upload-zone" id="u-zone" onclick="document.getElementById('ufile').click()">
+        <div class="uz-icon">&#128194;</div>
+        <p class="uz-txt"><strong>Tap to upload document</strong><br>PDF, JPG, PNG supported - Max 10MB<br><span style="font-size:.72rem;color:var(--sgl)">Patient data encrypted and DPDPA compliant</span></p>
+      </div>
+      <input type="file" id="ufile" accept=".pdf,.jpg,.jpeg,.png" onchange="handleUpload(this)">
+      <button class="run-btn" id="up-btn" style="display:none" onclick="runUpload()"><span id="up-lbl">Analyse Document with AI</span></button>
+      <div class="result-box" id="up-out">
+        <div class="result-lbl">AI Document Analysis <button class="copy-btn" onclick="copyResult('up-txt')">Copy</button></div>
+        <div class="result-txt" id="up-txt"></div>
+        <div class="result-pills" id="up-pills"></div>
+        <button class="save-btn" onclick="saveToHistory('document')">Save to History</button>
+      </div>
+    </div>
+
+    <div class="page" id="page-followup">
+      <div class="tool-header">
+        <h3>Patient Follow-up <em>Letter Generator</em></h3>
+        <p>Fill in the details below and AI will draft a professional, warm patient letter ready to send via WhatsApp, email, or print.</p>
+      </div>
+      <div class="fu-row">
+        <div>
+          <div class="input-label" style="font-family:'DM Mono',monospace;font-size:.6rem;color:var(--sg);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.4rem">Patient Name</div>
+          <input class="text-input" id="fu-name" type="text" placeholder="e.g. Mrs. Priya Sharma">
+        </div>
+        <div>
+          <div class="input-label" style="font-family:'DM Mono',monospace;font-size:.6rem;color:var(--sg);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.4rem">Letter Type</div>
+          <select class="sel-input" id="fu-type">
+            <option value="post-op">Post-operative Care</option>
+            <option value="recall">Recall / Check-up Reminder</option>
+            <option value="referral">Specialist Referral</option>
+            <option value="treatment">Treatment Plan Explanation</option>
+            <option value="followup">General Follow-up</option>
+          </select>
+        </div>
+      </div>
+      <div class="input-area" style="margin-bottom:.9rem">
+        <div class="input-label">Treatment / Situation Details</div>
+        <textarea id="fu-in" placeholder="Describe what was done and any specific instructions..."></textarea>
+      </div>
+      <div class="fu-row" style="margin-bottom:.9rem">
+        <div>
+          <div class="input-label" style="font-family:'DM Mono',monospace;font-size:.6rem;color:var(--sg);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.4rem">Doctor Name</div>
+          <input class="text-input" id="fu-doc" type="text" placeholder="e.g. Dr. Krishnamurthy">
+        </div>
+        <div>
+          <div class="input-label" style="font-family:'DM Mono',monospace;font-size:.6rem;color:var(--sg);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.4rem">Tone</div>
+          <select class="sel-input" id="fu-tone">
+            <option value="warm">Warm and reassuring</option>
+            <option value="professional">Professional and formal</option>
+            <option value="simple">Simple and clear</option>
+          </select>
+        </div>
+      </div>
+      <button class="run-btn" id="fu-btn" onclick="runFollowup()"><span id="fu-lbl">Generate Follow-up Letter</span></button>
+      <div class="result-box" id="fu-out">
+        <div class="result-lbl">AI-Drafted Patient Letter <button class="copy-btn" onclick="copyResult('fu-txt')">Copy</button></div>
+        <div class="result-txt" id="fu-txt"></div>
+        <button class="save-btn" onclick="saveToHistory('followup')">Save to History</button>
+      </div>
+    </div>
+
+    <div class="page" id="page-history">
+      <div class="tool-header">
+        <h3>Document <em>History</em></h3>
+        <p>All your AI-processed documents and letters, saved securely and encrypted.</p>
+      </div>
+      <div id="hist-container">
+        <div class="empty"><div class="empty-icon">&#128203;</div><div class="empty-t">No saved documents yet</div><div class="empty-d">Process a document and tap Save to History</div></div>
+      </div>
+    </div>
+
+    <div class="page" id="page-analytics">
+      <div class="tool-header">
+        <h3>Practice <em>Analytics</em></h3>
+        <p>Track your time savings, productivity gains, and AI usage across your clinic.</p>
+      </div>
+      <div class="analytics-grid">
+        <div class="an-card"><div class="an-n" id="an1">0</div><div class="an-l">Docs processed total</div><div class="an-trend">This session</div></div>
+        <div class="an-card"><div class="an-n" id="an2">0h</div><div class="an-l">Hours saved total</div><div class="an-trend">At 10 min per doc</div></div>
+        <div class="an-card"><div class="an-n" id="an3">0</div><div class="an-l">Follow-up letters</div><div class="an-trend">Drafted by AI</div></div>
+        <div class="an-card"><div class="an-n" id="an4">Rs0</div><div class="an-l">Admin cost saved</div><div class="an-trend">At Rs 200/hr rate</div></div>
+      </div>
+      <div class="bar-chart">
+        <div class="bar-title">Document Types Processed</div>
+        <div class="bar-row"><div class="bar-label">Summaries</div><div class="bar-track"><div class="bar-fill" id="b1" style="width:0%"></div></div><div class="bar-val" id="bv1">0</div></div>
+        <div class="bar-row"><div class="bar-label">Uploads</div><div class="bar-track"><div class="bar-fill" id="b2" style="width:0%;background:var(--gd)"></div></div><div class="bar-val" id="bv2">0</div></div>
+        <div class="bar-row"><div class="bar-label">Letters</div><div class="bar-track"><div class="bar-fill" id="b3" style="width:0%;background:var(--sf)"></div></div><div class="bar-val" id="bv3">0</div></div>
+      </div>
+    </div>
+
+    <div class="page" id="page-settings">
+      <div class="tool-header">
+        <h3>Practice <em>Settings</em></h3>
+        <p>Manage your clinic profile, preferences, and subscription.</p>
+      </div>
+      <div class="settings-section">
+        <div class="ss-title">Clinic Profile</div>
+        <div class="ss-row"><div><div class="ss-label">Clinic Name</div><div class="ss-desc">Pilot Dental Clinic, Chennai</div></div></div>
+        <div class="ss-row"><div><div class="ss-label">Doctor Name</div><div class="ss-desc">Dr. Pilot User</div></div></div>
+        <div class="ss-row"><div><div class="ss-label">Location</div><div class="ss-desc">Chennai, Tamil Nadu, India</div></div></div>
+        <div class="ss-row"><div><div class="ss-label">Current Plan</div></div><span class="plan-badge">Chennai Pilot - FREE</span></div>
+      </div>
+      <div class="settings-section">
+        <div class="ss-title">AI Preferences</div>
+        <div class="ss-row"><div><div class="ss-label">Tamil language support</div><div class="ss-desc">Include Tamil in summaries when detected</div></div><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
+        <div class="ss-row"><div><div class="ss-label">Auto-save to history</div><div class="ss-desc">Save all AI results automatically</div></div><div class="toggle" onclick="this.classList.toggle('on')"></div></div>
+        <div class="ss-row"><div><div class="ss-label">WhatsApp notifications</div><div class="ss-desc">Get updates via WhatsApp</div></div><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
+        <div class="ss-row"><div><div class="ss-label">DPDPA compliance mode</div><div class="ss-desc">Enhanced data protection - always on</div></div><div class="toggle on" style="opacity:.6;pointer-events:none"></div></div>
+      </div>
+      <div class="settings-section">
+        <div class="ss-title">Support</div>
+        <div class="ss-row"><div><div class="ss-label">WhatsApp Support</div><div class="ss-desc">Direct line to our team</div></div></div>
+        <div class="ss-row"><div><div class="ss-label">Pilot Feedback Form</div><div class="ss-desc">Share your experience with us</div></div></div>
+        <div class="ss-row"><div><div class="ss-label">Data Export</div><div class="ss-desc">Download all your data as PDF</div></div></div>
+      </div>
+    </div>
+
+    <div class="page" id="page-previsit">
+      <div class="tool-header">
+        <h3>Pre-Visit <em>Intelligence</em></h3>
+        <p>Patient voice notes sent before their appointment - AI-processed into clinical briefs so you are prepared before they walk in.</p>
+      </div>
+
+      <div class="pv-share-box">
+        <h4>Share patient <em>intake link</em></h4>
+        <p>Send this link to patients via WhatsApp before their appointment. They record a voice note describing their concern - you get an AI brief.</p>
+        <div class="pv-link-box">
+          <span>smartbrief-patient.html</span>
+          <button class="copy-link-btn" onclick="copyPatientLink()">Copy Link</button>
+        </div>
+        <button class="pv-whatsapp" onclick="sendWhatsApp()">&#128172; Send via WhatsApp</button>
+      </div>
+
+      <div class="section-title">Patient Pre-Visit Briefs <span id="brief-count"></span></div>
+      <div id="briefs-container">
+        <div class="empty"><div class="empty-icon">&#127908;</div><div class="empty-t">No pre-visit notes yet</div><div class="empty-d">Share the patient link above. When patients submit their voice note, their AI brief will appear here automatically.</div></div>
+      </div>
+
+      <div class="section-title" style="margin-top:1.4rem">Simulate Patient Submission <span>For demo purposes</span></div>
+      <div class="input-area">
+        <div class="input-label">Simulate Patient Note (paste or type what a patient might say)</div>
+        <textarea id="sim-in" placeholder="e.g. I have had a sharp pain in my upper left tooth for about 3 days. It is worse at night and when I drink cold water. My cheek is a bit swollen on that side. I am a bit scared it might be serious..."></textarea>
+      </div>
+      <div style="display:flex;gap:.6rem;margin-bottom:1rem;flex-wrap:wrap">
+        <input class="text-input" id="sim-name" type="text" placeholder="Patient name" style="flex:1;min-width:140px">
+        <select class="sel-input" id="sim-urgency" style="flex:1;min-width:140px">
+          <option value="routine">Routine appointment</option>
+          <option value="pain">Pain / Toothache</option>
+          <option value="swelling">Swelling</option>
+          <option value="emergency">Emergency</option>
+        </select>
+      </div>
+      <button class="run-btn" id="sim-btn" onclick="runSimulation()"><span id="sim-lbl">Generate Pre-Visit Brief</span></button>
+      <div class="result-box" id="sim-out">
+        <div class="result-lbl">Doctor Pre-Visit Brief <button class="copy-btn" onclick="copyResult('sim-txt')">Copy</button></div>
+        <div class="result-txt" id="sim-txt"></div>
+        <button class="save-btn" onclick="saveBrief()">Save to Pre-Visit Queue</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+var historyData = [];
+var counts = {sum: 0, upl: 0, fup: 0};
+var uFile = null;
+
+function doLogin() {
+  document.getElementById('auth').style.display = 'none';
+  document.getElementById('app').style.display = 'flex';
+  animateStats();
+}
+
+function doLogout() {
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('auth').style.display = 'flex';
+  document.getElementById('tb-menu').classList.remove('open');
+}
+
+function toggleMenu() {
+  document.getElementById('tb-menu').classList.toggle('open');
+}
+
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('#tb-menu') && !e.target.closest('#av')) {
+    document.getElementById('tb-menu').classList.remove('open');
+  }
+});
+
+function showPage(id, btn) {
+  var pages = document.querySelectorAll('.page');
+  var tabs = document.querySelectorAll('.ntab');
+  for (var i = 0; i < pages.length; i++) pages[i].classList.remove('active');
+  for (var i = 0; i < tabs.length; i++) tabs[i].classList.remove('active');
+  document.getElementById('page-' + id).classList.add('active');
+  if (btn) btn.classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+function showToast(msg) {
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(function() { t.classList.remove('show'); }, 2800);
+}
+
+function copyResult(id) {
+  var txt = document.getElementById(id).textContent;
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(txt).then(function() { showToast('Copied to clipboard'); });
+  } else {
+    var ta = document.createElement('textarea');
+    ta.value = txt;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    showToast('Copied!');
+  }
+}
+
+async function callAI(prompt, imgData, imgType) {
+  var content;
+  if (imgData) {
+    var mediaBlock = imgType.startsWith('image/') ? {type: 'image', source: {type: 'base64', media_type: imgType, data: imgData}} : {type: 'document', source: {type: 'base64', media_type: imgType, data: imgData}};
+    content = [mediaBlock, {type: 'text', text: prompt}];
+  } else {
+    content = prompt;
+  }
+  var response = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({model: 'claude-sonnet-4-20250514', max_tokens: 1000, messages: [{role: 'user', content: content}]})
+  });
+  var data = await response.json();
+  if (data.content && data.content.length > 0) {
+    return data.content.map(function(c) { return c.text || ''; }).join('');
+  }
+  return 'Unable to process. Please try again.';
+}
+
+async function runSummarise() {
+  var txt = document.getElementById('sum-in').value.trim();
+  if (!txt) { showToast('Please paste some clinical notes first'); return; }
+  var btn = document.getElementById('sum-btn');
+  var lbl = document.getElementById('sum-lbl');
+  btn.disabled = true;
+  lbl.innerHTML = '<span class="spin">&#8987;</span> AI reading notes...';
+  var out = document.getElementById('sum-out');
+  var res = document.getElementById('sum-txt');
+  var pills = document.getElementById('sum-pills');
+  out.classList.remove('show');
+  res.textContent = '';
+  pills.innerHTML = '';
+  var p = 'You are SmartBrief AI, a clinical documentation assistant for Indian dental and medical practices. Analyse this clinical text and provide a structured plain-text summary with: PATIENT SUMMARY, KEY CLINICAL FINDINGS (bullet points), DIAGNOSIS, ACTION ITEMS (bullet points), MEDICATIONS PRESCRIBED, FOLLOW-UP recommendation, and URGENCY LEVEL (Low/Medium/High). Clinical text: ' + txt;
+  try {
+    var reply = await callAI(p, null, null);
+    out.classList.add('show');
+    res.textContent = reply;
+    var pillLabels = ['Summary Generated', 'Actions Extracted', 'DPDPA Compliant', 'Ready to Save'];
+    for (var i = 0; i < pillLabels.length; i++) {
+      var pill = document.createElement('div');
+      pill.className = 'rpill';
+      pill.textContent = pillLabels[i];
+      pills.appendChild(pill);
+    }
+    counts.sum++;
+    updateCounts();
+    addToRecent('Clinical Summary', 'Clinical notes processed and summarised', 'summary');
+  } catch(e) {
+    out.classList.add('show');
+    res.textContent = 'AI service temporarily unavailable. Please check your connection and try again.';
+  }
+  btn.disabled = false;
+  lbl.textContent = 'Summarise Clinical Notes';
+}
+
+function handleUpload(inp) {
+  if (!inp.files[0]) return;
+  uFile = inp.files[0];
+  document.getElementById('u-zone').innerHTML = '<div class="uz-icon">&#10003;</div><p class="uz-txt"><strong>' + uFile.name + '</strong><br>' + Math.round(uFile.size / 1024) + ' KB - Ready to analyse</p>';
+  document.getElementById('up-btn').style.display = 'flex';
+}
+
+async function runUpload() {
+  if (!uFile) return;
+  var btn = document.getElementById('up-btn');
+  var lbl = document.getElementById('up-lbl');
+  btn.disabled = true;
+  lbl.innerHTML = '<span class="spin">&#8987;</span> AI reading document...';
+  var out = document.getElementById('up-out');
+  var res = document.getElementById('up-txt');
+  var pills = document.getElementById('up-pills');
+  out.classList.remove('show');
+  res.textContent = '';
+  pills.innerHTML = '';
+  var reader = new FileReader();
+  reader.onload = async function(e) {
+    try {
+      var b64 = e.target.result.split(',')[1];
+      var p = 'You are SmartBrief AI for Indian dental and medical practices. Analyse this document and provide a structured plain-text response with: DOCUMENT TYPE, SUMMARY (2-3 sentences), KEY INFORMATION (bullet points), ACTION ITEMS FOR PRACTICE (bullet points), URGENCY level, and any important NOTES.';
+      var reply = await callAI(p, b64, uFile.type);
+      out.classList.add('show');
+      res.textContent = reply;
+      var pillLabels = ['Document Read', 'Data Extracted', 'DPDPA Compliant'];
+      for (var i = 0; i < pillLabels.length; i++) {
+        var pill = document.createElement('div');
+        pill.className = 'rpill';
+        pill.textContent = pillLabels[i];
+        pills.appendChild(pill);
+      }
+      counts.upl++;
+      updateCounts();
+      addToRecent('Document: ' + uFile.name, 'Uploaded and analysed by AI', 'document');
+    } catch(err) {
+      out.classList.add('show');
+      res.textContent = 'Document processing failed. Please try again.';
+    }
+    btn.disabled = false;
+    lbl.textContent = 'Analyse Document with AI';
+  };
+  reader.readAsDataURL(uFile);
+}
+
+async function runFollowup() {
+  var name = document.getElementById('fu-name').value.trim();
+  var details = document.getElementById('fu-in').value.trim();
+  var type = document.getElementById('fu-type').value;
+  var doc = document.getElementById('fu-doc').value.trim() || 'The Care Team';
+  var tone = document.getElementById('fu-tone').value;
+  if (!details) { showToast('Please describe the patient situation first'); return; }
+  var btn = document.getElementById('fu-btn');
+  var lbl = document.getElementById('fu-lbl');
+  btn.disabled = true;
+  lbl.innerHTML = '<span class="spin">&#8987;</span> Drafting letter...';
+  var out = document.getElementById('fu-out');
+  var res = document.getElementById('fu-txt');
+  out.classList.remove('show');
+  res.textContent = '';
+  var toneMap = {warm: 'warm, caring, and reassuring', professional: 'professional and formal', simple: 'simple, clear, and easy to understand'};
+  var toneDesc = toneMap[tone] || 'warm and professional';
+  var patientName = name || 'Dear Patient';
+  var p = 'You are SmartBrief AI drafting a patient follow-up letter for an Indian dental practice. Patient: ' + patientName + '. Letter type: ' + type + '. Doctor: ' + doc + '. Tone: ' + toneDesc + '. Write a complete professional letter in plain text (no markdown) including: warm greeting, reference to recent visit, care instructions, next steps, contact encouragement, and closing signed by ' + doc + '. Situation: ' + details;
+  try {
+    var reply = await callAI(p, null, null);
+    out.classList.add('show');
+    res.textContent = reply;
+    counts.fup++;
+    updateCounts();
+    addToRecent('Follow-up: ' + patientName, 'Letter drafted by AI', 'followup');
+  } catch(e) {
+    out.classList.add('show');
+    res.textContent = 'Letter generation failed. Please try again.';
+  }
+  btn.disabled = false;
+  lbl.textContent = 'Generate Follow-up Letter';
+}
+
+function saveToHistory(type) {
+  var idMap = {summary: 'sum-txt', document: 'up-txt', followup: 'fu-txt'};
+  var txt = document.getElementById(idMap[type]).textContent;
+  if (!txt) { showToast('Nothing to save yet'); return; }
+  var item = {type: type, text: txt, time: new Date().toLocaleTimeString('en-IN', {hour: '2-digit', minute: '2-digit'}), date: new Date().toLocaleDateString('en-IN')};
+  historyData.unshift(item);
+  renderHistory();
+  showToast('Saved to history');
+}
+
+function renderHistory() {
+  var c = document.getElementById('hist-container');
+  if (!historyData.length) {
+    c.innerHTML = '<div class="empty"><div class="empty-icon">&#128203;</div><div class="empty-t">No saved documents yet</div><div class="empty-d">Process a document and tap Save to History</div></div>';
+    return;
+  }
+  var icons = {summary: '&#128203;', document: '&#128196;', followup: '&#9993;'};
+  var labels = {summary: 'Clinical Summary', document: 'Document Analysis', followup: 'Follow-up Letter'};
+  var badgeCls = {summary: 'rb-sum', document: 'rb-doc', followup: 'rb-fup'};
+  var html = '';
+  for (var i = 0; i < historyData.length; i++) {
+    var item = historyData[i];
+    html += '<div class="hist-item"><div class="hist-top"><div class="hist-title">' + icons[item.type] + ' ' + labels[item.type] + '</div><div class="hist-time">' + item.date + ' ' + item.time + '</div></div><div class="hist-preview">' + item.text.substring(0, 120) + '...</div><div class="hist-tags"><span class="hist-tag ' + badgeCls[item.type] + '">' + labels[item.type] + '</span><span class="hist-tag" style="background:var(--cr);color:var(--md)">DPDPA Encrypted</span></div></div>';
+  }
+  c.innerHTML = html;
+}
+
+function addToRecent(name, meta, type) {
+  var icons = {summary: '&#128203;', document: '&#128196;', followup: '&#9993;'};
+  var badgeCls = {summary: 'rb-sum', document: 'rb-doc', followup: 'rb-fup'};
+  var labels = {summary: 'Summary', document: 'Document', followup: 'Follow-up'};
+  var list = document.getElementById('rec-list');
+  if (list.querySelector('.empty')) list.innerHTML = '';
+  var html = '<div class="rec-item"><div class="rec-icon">' + icons[type] + '</div><div class="rec-info"><div class="rec-name">' + name + '</div><div class="rec-meta">' + meta + ' - Just now</div></div><span class="rec-badge ' + badgeCls[type] + '">' + labels[type] + '</span></div>';
+  list.insertAdjacentHTML('afterbegin', html);
+}
+
+function updateCounts() {
+  var total = counts.sum + counts.upl + counts.fup;
+  var hrs = Math.round(total * 10 / 60 * 10) / 10;
+  var cost = Math.round(hrs * 200);
+  document.getElementById('s1').textContent = total;
+  document.getElementById('s2').textContent = hrs + 'h';
+  document.getElementById('s3').textContent = counts.fup;
+  document.getElementById('an1').textContent = total;
+  document.getElementById('an2').textContent = hrs + 'h';
+  document.getElementById('an3').textContent = counts.fup;
+  document.getElementById('an4').textContent = 'Rs' + cost;
+  var max = Math.max(counts.sum, counts.upl, counts.fup, 1);
+  document.getElementById('b1').style.width = (counts.sum / max * 100) + '%';
+  document.getElementById('b2').style.width = (counts.upl / max * 100) + '%';
+  document.getElementById('b3').style.width = (counts.fup / max * 100) + '%';
+  document.getElementById('bv1').textContent = counts.sum;
+  document.getElementById('bv2').textContent = counts.upl;
+  document.getElementById('bv3').textContent = counts.fup;
+}
+
+function animateStats() {
+  var counter = 0;
+  var step = function() {
+    if (counter <= 12) {
+      document.getElementById('s1').textContent = counter;
+      counter++;
+      setTimeout(step, 60);
+    } else {
+      document.getElementById('s1').textContent = 12;
+      document.getElementById('s2').textContent = '2.0h';
+      document.getElementById('s3').textContent = 5;
+    }
+  };
+  setTimeout(step, 400);
+}
+function copyPatientLink() {
+  var link = window.location.href.replace('smartbrief-dashboard.html', 'smartbrief-patient.html');
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(link).then(function() { showToast('Patient link copied!'); });
+  } else {
+    showToast('Link: smartbrief-patient.html');
+  }
+}
+
+function sendWhatsApp() {
+  var msg = 'Dear Patient, before your appointment please send us a quick voice note describing your concern using this link: ' + window.location.href.replace('smartbrief-dashboard.html','smartbrief-patient.html') + ' - This helps Dr. [Name] prepare for your visit and saves time for both of you.';
+  window.open('https://wa.me/?text=' + encodeURIComponent(msg), '_blank');
+}
+
+function copyResult(id) {
+  var txt = document.getElementById(id).textContent;
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(txt).then(function() { showToast('Copied to clipboard'); });
+  } else {
+    var ta = document.createElement('textarea');
+    ta.value = txt;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    showToast('Copied!');
+  }
+}
+
+var savedBriefs = [];
+
+async function runSimulation() {
+  var notes = document.getElementById('sim-in').value.trim();
+  var name = document.getElementById('sim-name').value.trim() || 'Anonymous Patient';
+  var urgency = document.getElementById('sim-urgency').value;
+  if (!notes) { showToast('Please enter patient notes to simulate'); return; }
+  var btn = document.getElementById('sim-btn');
+  var lbl = document.getElementById('sim-lbl');
+  btn.disabled = true;
+  lbl.innerHTML = '<span class="spin">&#8987;</span> Generating clinical brief...';
+  var out = document.getElementById('sim-out');
+  var res = document.getElementById('sim-txt');
+  out.classList.remove('show');
+  res.textContent = '';
+  var p = 'You are SmartBrief AI generating a pre-visit clinical brief for an Indian dentist. Patient: ' + name + '. Appointment type: ' + urgency + '. Generate a structured plain-text doctor brief including: PATIENT NAME, PRE-VISIT SUMMARY (2-3 sentences), REPORTED SYMPTOMS (bullet points), LIKELY CONDITIONS TO INVESTIGATE (bullet points), KEY QUESTIONS TO ASK THE PATIENT, URGENCY ASSESSMENT (Routine/Priority/Urgent), and RECOMMENDED APPOINTMENT DURATION. Patient note: ' + notes;
+  try {
+    var response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({model: 'claude-sonnet-4-20250514', max_tokens: 1000, messages: [{role: 'user', content: p}]})
+    });
+    var data = await response.json();
+    var reply = data.content ? data.content.map(function(c) { return c.text || ''; }).join('') : 'Brief generated.';
+    out.classList.add('show');
+    res.textContent = reply;
+  } catch(e) {
+    out.classList.add('show');
+    res.textContent = 'AI temporarily unavailable. Please try again.';
+  }
+  btn.disabled = false;
+  lbl.textContent = 'Generate Pre-Visit Brief';
+}
+
+function saveBrief() {
+  var txt = document.getElementById('sim-txt').textContent;
+  var name = document.getElementById('sim-name').value.trim() || 'Anonymous Patient';
+  var urgency = document.getElementById('sim-urgency').value;
+  if (!txt) { showToast('No brief to save'); return; }
+  var urgMap = {routine: 'Routine', pain: 'Priority', swelling: 'Priority', emergency: 'Urgent'};
+  savedBriefs.unshift({name: name, brief: txt, urgency: urgMap[urgency] || 'Routine', time: new Date().toLocaleTimeString('en-IN', {hour: '2-digit', minute: '2-digit'})});
+  renderBriefs();
+  showToast('Brief saved to queue');
+  document.getElementById('brief-count').textContent = '(' + savedBriefs.length + ' waiting)';
+}
+
+function checkLocalBrief() {
+  try {
+    var stored = localStorage.getItem('latest_patient_brief');
+    if (stored) {
+      var data = JSON.parse(stored);
+      if (data && data.brief && data.name) {
+        var urgMap = {toothache: 'Priority', sensitivity: 'Routine', swelling: 'Priority', broken: 'Priority', bleeding: 'Priority', cosmetic: 'Routine', routine: 'Routine', other: 'Routine'};
+        savedBriefs.unshift({name: data.name, brief: data.brief, urgency: urgMap[data.concern] || 'Routine', time: new Date().toLocaleTimeString('en-IN', {hour: '2-digit', minute: '2-digit'})});
+        renderBriefs();
+        document.getElementById('brief-count').textContent = '(' + savedBriefs.length + ' waiting)';
+        localStorage.removeItem('latest_patient_brief');
+        showToast('New patient brief received!');
+      }
+    }
+  } catch(e) {}
+}
+
+function renderBriefs() {
+  var c = document.getElementById('briefs-container');
+  if (!savedBriefs.length) {
+    c.innerHTML = '<div class="empty"><div class="empty-icon">&#127908;</div><div class="empty-t">No pre-visit notes yet</div><div class="empty-d">Share the patient link above to start receiving voice briefs.</div></div>';
+    return;
+  }
+  var html = '';
+  for (var i = 0; i < savedBriefs.length; i++) {
+    var b = savedBriefs[i];
+    var urgCls = {Routine: 'urg-routine', Priority: 'urg-priority', Urgent: 'urg-urgent'}[b.urgency] || 'urg-routine';
+    var preview = b.brief.substring(0, 140) + '...';
+    html += '<div class="brief-card" id="brief-' + i + '">';
+    html += '<div class="brief-card-top"><div class="brief-patient">&#127908; ' + b.name + ' <span class="new-dot"></span></div><div class="brief-time">' + b.time + '</div></div>';
+    html += '<div class="brief-meta"><span class="brief-urgency ' + urgCls + '">' + b.urgency + '</span><span>AI Brief Ready</span><span>DPDPA Encrypted</span></div>';
+    html += '<div class="brief-preview" id="bprev-' + i + '">' + preview + '</div>';
+    html += '<div class="brief-full" id="bfull-' + i + '">' + b.brief + '</div>';
+    html += '<div class="brief-actions">';
+    html += '<button class="bact-btn primary" onclick="toggleBrief(' + i + ')">View Full Brief</button>';
+    html += '<button class="bact-btn" onclick="copyBrief(' + i + ')">Copy Brief</button>';
+    html += '<button class="bact-btn" onclick="dismissBrief(' + i + ')">Dismiss</button>';
+    html += '</div></div>';
+  }
+  c.innerHTML = html;
+}
+
+function toggleBrief(i) {
+  var full = document.getElementById('bfull-' + i);
+  var btn = document.querySelector('#brief-' + i + ' .bact-btn.primary');
+  if (full.classList.contains('show')) {
+    full.classList.remove('show');
+    btn.textContent = 'View Full Brief';
+  } else {
+    full.classList.add('show');
+    btn.textContent = 'Collapse';
+  }
+}
+
+function copyBrief(i) {
+  var txt = savedBriefs[i].brief;
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(txt).then(function() { showToast('Brief copied!'); });
+  } else {
+    showToast('Brief text ready to copy');
+  }
+}
+
+function dismissBrief(i) {
+  savedBriefs.splice(i, 1);
+  renderBriefs();
+  document.getElementById('brief-count').textContent = savedBriefs.length ? '(' + savedBriefs.length + ' waiting)' : '';
+  showToast('Brief dismissed');
+}
+
+setInterval(checkLocalBrief, 5000);
+
+</script>
+</body>
+</html>
